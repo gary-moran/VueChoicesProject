@@ -22,21 +22,39 @@
 
 		<navigation-bar name="Choices"></navigation-bar>
 
-		<!-- Message Bar-->
-		<div id="messageBar" class="alert-messages"></div>
+		<!-- Message Bar -->
+		<div id="messageBar" class="alert-messages">
+			<div v-if="haveMessages">
+				<div v-for="message in messages" v-bind:class="message.alertClass">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>					
+					<span v-text="message.text"></span>
+				</div>
+			</div>
+		</div>
 		
-		<!--<choices-add></choices-add>-->
-		<!-- list of choices-->	
 		<div class="container body-content">
-			<div v-for="item in appList" :key="item.key">
-				<choices-display 
-					:keyProp="item.key" 
-					:parent="item.data.parent" 
-					:text="item.data.text" 
-					:image="item.data.image" 
-					:category="item.data.category">
-				</choices-add>
-			</div>			
+			<div class="container">
+				<!-- go back a level -->
+				<div class="card text-white bg-danger mb-3 w-25" v-if="!atRoot" v-on:click="goBack">
+					<div class="card-header">
+						<a href="#" class="stretched-link" v-on:click=""></a>
+						<i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i>
+					</div>
+				</div>
+
+				<!-- list of choices-->
+				<div v-for="item in appList" :key="item.key">
+					<choices-display 
+						v-on:add-message="addMessage" 
+						v-on:select-choice="selectChoice" 
+						:key-prop="item.key" 
+						:parent="item.data.parent" 
+						:text="item.data.text"
+						:image="item.data.image"
+						:category="item.data.category">
+					</choices-add>
+				</div>
+			</div>
 		</div>
 
 		<!-- Footer -->
