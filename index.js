@@ -51,19 +51,88 @@ Vue.component("choices-display", {
     `    
     <div>
         <!-- Card -->
-        <div class="card">
-            <div class="card-header" style="transform: rotate(0);">
-                <a href="#" class="stretched-link" v-on:click="selectChoice"></a>
-                {{choiceText}}
-                <span class="float-right badge badge-info" v-if="choiceCategory">
-                    CATEGORY
-                </span>
-            </div>
-            <div class="card-body">
-                <button class="btn btn-success" data-toggle="modal" data-target="#addChoice">Add New Choice</button>
-                <button class="btn btn-danger" v-if="canDelete" v-on:click="deleteData">Delete this Choice</button>				
+        <div class="row my-2">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-11" style="transform: rotate(0);">
+                                <a href="#" class="stretched-link" v-on:click="selectChoice"></a>
+                                {{choiceText}}
+                                <span class="float-right badge badge-info" v-if="choiceCategory">
+                                    CATEGORY
+                                </span>
+                            </div>
+                            <div class="col-1" v-if="canDelete">
+                                <button type="button" class="btn btn-danger btn-sm" v-if="canDelete" data-toggle="modal" data-target="#deleteChoice"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <img class="card-img" src="choice.jpg" alt="Card image cap" height="180">
+                </div>
             </div>
         </div>
+        
+        <!-- Modal Delete -->
+        <div class="modal fade" id="deleteChoice" tabindex="-1" role="dialog" aria-labelledby="deleteChoiceLabel"
+        aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteChoiceLabel">Delete Choice</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Delete the choice: {{text}}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>                                                        
+                        <button type="button" class="btn btn-primary" v-on:click="deleteData" data-dismiss="modal">Delete this Choice</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `,
+    created() {        
+    },
+    data: function () {
+        return {
+            choiceKey: this.keyProp,
+            choiceParent: this.parent,
+            choiceText: this.text,
+            choiceImage: this.image,   
+            choiceCategory: this.category,
+        }
+    },
+    computed: {
+       canDelete() {
+           return this.choiceKey != "CHC:ROOT";
+       },
+   },
+   methods: {
+        selectChoice() {
+            this.$emit("select-choice", this.choiceKey)
+        },
+       deleteData() {
+           deleteData(this.choiceKey);           
+           this.$emit("add-message",`Deleted choice: ${this.choiceText}`);
+           this.$emit("select-choice", this.choiceParent)
+       }
+   }
+})
+
+Vue.component("choices-add", {
+    props: {
+        parent: {type: String},
+    },
+    template:
+    `    
+    <div>
+        <!-- Add "Button" -->
+        <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addChoice">Add New Choice</button>       
         
         <!-- Modal Save -->
         <div class="modal fade" id="addChoice" tabindex="-1" role="dialog" aria-labelledby="addNewChoiceLabel"
@@ -105,15 +174,8 @@ Vue.component("choices-display", {
         </div>
     </div>
     `,
-    created() {        
-    },
     data: function () {
         return {
-            choiceKey: this.keyProp,
-            choiceParent: this.parent,
-            choiceText: this.text,
-            choiceImage: this.image,   
-            choiceCategory: this.category,
             addKey: "",
             addText: "",
             addImage: "",
@@ -124,32 +186,23 @@ Vue.component("choices-display", {
         addCategory() {
            return this.checked;
        },
-       canDelete() {
-           return this.choiceKey != "CHC:ROOT";
-       }
    },
    methods: {
-        selectChoice() {
-            this.$emit("select-choice", this.choiceKey)
-        },
         saveData() {
-           data = {
-               parent: this.choiceKey,
-               text: this.addText,
-               image: this.addImage,
-               category: this.addCategory
-           };
-           this.choicekey = saveData(this.addKey, data);
-           this.$emit("add-message",`${this.addText} choice successfully saved`);
-           // clean-up
-           this.addText = "";
-           this.addImage = "";
-           this.checked = false;
-       },
-       deleteData() {
-           deleteData(this.choiceKey);           
-           this.$emit("add-message",`Deleted choice: ${this.choiceText}`);
-           this.$emit("select-choice", this.choiceParent)
+            data = {
+                parent: this.parent,
+                text: this.addText,
+                image: this.addImage,
+                category: this.addCategory
+            };
+            saveData(this.addKey, data);
+            this.$emit("add-message",`${this.addText} choice successfully saved`);
+            // clean-up
+            this.addText = "";
+            this.addImage = "";
+            this.checked = false;
+            // refresh
+            this.$emit("select-choice", this.parent)
        }
    }
 })
@@ -160,33 +213,31 @@ var app = new Vue({
      data: function () {
         return {
             rootKey: "CHC:ROOT",
-            appList: [],
+            appList:[],
             messages: [],
-            parent: ""
+            parent: this.rootKey,
         }
     },
     created() {
-        this.goRoot();
+        setRootData(this.rootKey);
+        this.selectChoice(this.rootKey);  
+    },
+    mounted() {
     },
     computed: {
         atRoot() {
-            return this.parent === "";
+            return this.parent === this.rootKey;
         },
         haveMessages() {
             return this.messages.length > 0;
-        },        
+        },           
     },    
     methods: {
-        goRoot() {
-            let key = this.rootKey;
-            let data = getRootData(key);
-            this.appList = [ { key: key, data: data } ]            
-        },
         goBack() {
-            if (this.parent !== "") {
+            if (this.parent !== this.rootKey) {
                 let data = getData(this.parent);
                 if (data !== undefined || data !== null) {
-                    if (data.parent !== undefined || data.parent !== null) 
+                    if (data.parent !== undefined || data.parent !== null || data.parent !== "") 
                         this.selectChoice(data.parent);
                     else 
                         this.goRoot();
@@ -197,10 +248,11 @@ var app = new Vue({
         },
         selectChoice(choiceKey) {
             let list = listData(choiceKey);
-            if (list && list.length) {
-                this.appList = list;
-                this.parent = choiceKey;
-            }
+            if (list && list.length) 
+                this.appList = list;                
+            else 
+                this.appList = [];
+            this.parent = choiceKey;
         },
         addMessage(messageText, messageType) {
             this.messages.push({ text: messageText, alertClass: getAlertClass(messageType) });            
@@ -211,19 +263,18 @@ var app = new Vue({
                 if (this.messages.alertClass !== "danger")
                     this.messages.splice(i, 1);
             }
-        }        
+        },           
     }
 });
 
 // JavaScript Functions
 
 /**
- * Returns the Choices root data
+ * Sets the Choices root data
  * 
  * @param {string} rootKey 
- * @return {object} key data
  */
-function getRootData(rootKey) {
+function setRootData(rootKey) {
     let data = getData(rootKey);
     if (data === undefined || data === null) {
         data = {
@@ -234,7 +285,6 @@ function getRootData(rootKey) {
         };
         saveData(rootKey, data);
     }
-    return data;
 }
 
 /**
