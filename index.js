@@ -45,7 +45,8 @@ Vue.component("choices-display", {
         parent: {type: String},
 		text: {type: String},
 		image: {type: String},
-		category: {type: Boolean}		
+        category: {type: Boolean},
+        isSelected: {type:Boolean},
     },
     template:
     `    
@@ -53,7 +54,7 @@ Vue.component("choices-display", {
         <!-- Card -->
         <div class="row my-2">
             <div class="col-sm-12">
-                <div class="card">
+                <div class="card" :class="{ 'border-dark': isSelected }">
                     <div class="card-header">
                         <div class="row">
                             <div class="col-11" style="transform: rotate(0);">
@@ -127,12 +128,13 @@ Vue.component("choices-display", {
 Vue.component("choices-add", {
     props: {
         parent: {type: String},
+        isSelected: {type:Boolean},
     },
     template:
     `    
     <div>
         <!-- Add "Button" -->
-        <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addChoice">Add New Choice</button>       
+        <button v-if="!isSelected" type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addChoice">Add New Choice</button>       
         
         <!-- Modal Save -->
         <div class="modal fade" id="addChoice" tabindex="-1" role="dialog" aria-labelledby="addNewChoiceLabel"
@@ -216,6 +218,9 @@ var app = new Vue({
             appList:[],
             messages: [],
             parent: this.rootKey,
+            text: "",
+            category: false,
+            selected: false,
         }
     },
     created() {
@@ -230,7 +235,10 @@ var app = new Vue({
         },
         haveMessages() {
             return this.messages.length > 0;
-        },           
+        },    
+        displayText() {
+            return this.category && !this.atRoot;
+        }       
     },    
     methods: {
         goBack() {
@@ -247,12 +255,27 @@ var app = new Vue({
             }
         },
         selectChoice(choiceKey) {
-            let list = listData(choiceKey);
-            if (list && list.length) 
-                this.appList = list;                
-            else 
-                this.appList = [];
-            this.parent = choiceKey;
+            this.selected = false;
+
+            let data = getData(choiceKey);
+            if (data !== undefined && data !== null) {
+
+                this.category = data.category;
+                this.text = data.text;
+
+                let list = listData(choiceKey);
+                if (list && list.length)
+                    this.appList = list;   
+                else {
+                    if (data.category)
+                        this.appList = [];
+                    else {
+                        this.appList = [{key: choiceKey, data: data}];
+                        this.selected = true;
+                    }
+                }
+                this.parent = choiceKey;
+            }
         },
         addMessage(messageText, messageType) {
             this.messages.push({ text: messageText, alertClass: getAlertClass(messageType) });            

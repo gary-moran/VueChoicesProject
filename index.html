@@ -38,17 +38,24 @@
 				<div class="container" style="height: 50px;">
 					<div class="row">
 						<!-- go back a level -->
-						<div class="col-6">
+						<div class="col-2">
 							<button type="button" class="btn btn-warning" v-if="!atRoot" v-on:click="goBack">
 								<i class="fa fa-arrow-left fa-2x" aria-hidden="true"></i>
 							</button>
 						</div>
+						<div class="col-8">
+							<button type="button" class="btn btn-secondary btn-block" v-if="displayText" disabled>
+								{{text}}
+							</button>
+						</div>
 						<!-- add a new Choice -->
-						<div class="col-6">
+						<div class="col-2">
 							<choices-add 
 								v-on:add-message="addMessage" 
 								v-on:select-choice="selectChoice" 
-								:parent="parent" ></choices-add>
+								:parent="parent"
+								:is-selected="selected">
+							</choices-add>
 						</div>
 					</div>
 				</div>
@@ -56,6 +63,7 @@
 				<!-- list of choices-->
 				<div class="container">
 					<div v-for="item in appList" :key="item.key">
+
 						<choices-display 
 							v-on:add-message="addMessage" 
 							v-on:select-choice="selectChoice" 
@@ -63,7 +71,8 @@
 							:parent="item.data.parent" 
 							:text="item.data.text"
 							:image="item.data.image"
-							:category="item.data.category">
+							:category="item.data.category"
+							:is-selected="selected">
 						</choices-display>
 					</div>
 				</div>
