@@ -14,13 +14,26 @@ Vue.component("navigation-bar", {
                 </button>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav mr-auto">
-                        <li class="nav-item"><a class="nav-link" href="#">Edit</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" @click="edit">Edit</a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav> 
     </div>
-    `
+    `,
+    data: function() {
+        return {
+            isEdit: false,
+        }
+    },
+    methods: {
+        edit() {
+            this.isEdit = !this.isEdit;
+            this.$emit("edit-mode", this.isEdit);            
+        },
+    }
 })
 
 Vue.component("page-footer", {
@@ -47,6 +60,7 @@ Vue.component("choices-display", {
 		image: {type: String},
         category: {type: Boolean},
         isSelected: {type:Boolean},
+        editMode: {type:Boolean},
     },
     template:
     `    
@@ -110,7 +124,7 @@ Vue.component("choices-display", {
     },
     computed: {
        canDelete() {
-           return this.choiceKey != "CHC:ROOT";
+           return (this.choiceKey != "CHC:ROOT" && this.editMode);
        },
    },
    methods: {
@@ -129,12 +143,13 @@ Vue.component("choices-add", {
     props: {
         parent: {type: String},
         isSelected: {type:Boolean},
+        editMode: {type:Boolean},
     },
     template:
     `    
     <div>
         <!-- Add "Button" -->
-        <button v-if="!isSelected" type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addChoice">Add New Choice</button>       
+        <button v-if="!isSelected && editMode" type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addChoice">Add New Choice</button>       
         
         <!-- Modal Save -->
         <div class="modal fade" id="addChoice" tabindex="-1" role="dialog" aria-labelledby="addNewChoiceLabel"
@@ -221,6 +236,7 @@ var app = new Vue({
             text: "",
             category: false,
             selected: false,
+            edit: false,
         }
     },
     created() {
@@ -286,7 +302,10 @@ var app = new Vue({
                 if (this.messages.alertClass !== "danger")
                     this.messages.splice(i, 1);
             }
-        },           
+        }, 
+        editMode(edit) {
+            this.edit = edit;
+        }          
     }
 });
 

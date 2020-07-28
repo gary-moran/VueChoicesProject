@@ -20,7 +20,9 @@
 	<!-- App -->
 	<div id="app">
 
-		<navigation-bar name="Choices"></navigation-bar>
+		<navigation-bar name="Choices"
+			v-on:edit-mode="editMode" >
+		</navigation-bar>
 
 		<!-- Message Bar -->
 		<div id="messageBar" class="alert-messages">
@@ -54,7 +56,8 @@
 								v-on:add-message="addMessage" 
 								v-on:select-choice="selectChoice" 
 								:parent="parent"
-								:is-selected="selected">
+								:is-selected="selected"
+								:edit-mode="edit">
 							</choices-add>
 						</div>
 					</div>
@@ -72,7 +75,8 @@
 							:text="item.data.text"
 							:image="item.data.image"
 							:category="item.data.category"
-							:is-selected="selected">
+							:is-selected="selected"
+							:edit-mode="edit">
 						</choices-display>
 					</div>
 				</div>
